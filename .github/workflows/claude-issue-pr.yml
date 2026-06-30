@@ -26,7 +26,7 @@ jobs:
       - name: Run Claude Code
         uses: anthropics/claude-code-action@v1
         with:
-          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           # issue の本文・コメント内容は claude-code-action が
           # github.event のコンテキストから自動的に読み取る。
           # issue の内容をもとにコードを修正し PR を作成するよう指示する。
