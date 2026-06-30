@@ -65,6 +65,11 @@ class TaskStore:
         del self.tasks[index]
         self.save()
 
+    def delete_completed(self):
+        """完了済みのタスクをまとめて削除する。"""
+        self.tasks = [task for task in self.tasks if not task["done"]]
+        self.save()
+
     def count_remaining(self):
         """未完了タスクの件数を返す。"""
         remaining = 0
@@ -142,6 +147,13 @@ class TodoApp:
         )
         self.status.pack(side="left")
 
+        clear_btn = tk.Button(
+            footer, text="完了済みを削除", command=self.on_delete_completed,
+            relief="flat", cursor="hand2", bg=COLOR_BG, fg=COLOR_ACCENT_LIGHT,
+            font=("Yu Gothic UI", 10), activebackground=COLOR_BG,
+        )
+        clear_btn.pack(side="right")
+
     # ---- 操作 ----
 
     def on_add(self):
@@ -160,6 +172,14 @@ class TodoApp:
     def on_delete(self, index):
         self.store.delete(index)
         self.refresh()
+
+    def on_delete_completed(self):
+        """完了済みタスクをまとめて削除する。"""
+        if not any(task["done"] for task in self.store.tasks):
+            return
+        if messagebox.askyesno("確認", "完了済みのタスクをすべて削除しますか？"):
+            self.store.delete_completed()
+            self.refresh()
 
     def refresh(self):
         """タスク一覧を画面に描き直す。"""
