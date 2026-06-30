@@ -19,11 +19,6 @@ jobs:
       id-token: write
       actions: write        # Actions キャッシュ書き込みのため
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v7
-        with:
-          fetch-depth: 0
-
       - name: Run Claude Code
         uses: anthropics/claude-code-action@v1
         with:
@@ -34,7 +29,6 @@ jobs:
           claude_args: |
             --allowedTools "Bash,Edit,Write,Read,Glob,Grep"
           prompt: |
-            あなたはこのリポジトリのコーディングエージェントです。
             トリガーとなった issue の内容と、@claude メンションを含むコメントの
             内容を読み取り、要望に沿ってコードを修正してください。
             修正後は新しいブランチを作成して変更をコミットし、
