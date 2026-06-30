@@ -26,12 +26,25 @@ COLOR_ACCENT_LIGHT = "#5eead4"  # 明るいアクセント
 COLOR_TEXT = "#f4f8f8"      # 文字
 COLOR_DONE = "#6b7c7e"      # 完了タスクの文字
 
+# タスクに指定できるカテゴリ
+CATEGORIES = ["仕事", "家事", "買い物", "私用", "その他"]
+DEFAULT_CATEGORY = "その他"
+
+# カテゴリごとのタグ色
+CATEGORY_COLORS = {
+    "仕事": "#ef6f6c",
+    "家事": "#f4a261",
+    "買い物": "#e9c46a",
+    "私用": "#5eead4",
+    "その他": "#9aa5a8",
+}
+
 
 class TaskStore:
     """タスクの読み書きを担当するクラス。
 
     タスクは辞書のリストで持ちます。
-        {"title": "牛乳を買う", "done": False}
+        {"title": "牛乳を買う", "done": False, "category": "買い物"}
     """
 
     def __init__(self, path):
@@ -44,15 +57,18 @@ class TaskStore:
         if os.path.exists(self.path):
             with open(self.path, "r", encoding="utf-8") as f:
                 self.tasks = json.load(f)
+            # カテゴリ未設定の既存タスクにはデフォルトを補う
+            for task in self.tasks:
+                task.setdefault("category", DEFAULT_CATEGORY)
 
     def save(self):
         """現在のタスクをファイルに書き出す。"""
         with open(self.path, "w", encoding="utf-8") as f:
             json.dump(self.tasks, f, ensure_ascii=False, indent=2)
 
-    def add(self, title):
+    def add(self, title, category=DEFAULT_CATEGORY):
         """新しいタスクを追加する。"""
-        self.tasks.append({"title": title, "done": False})
+        self.tasks.append({"title": title, "done": False, "category": category})
         self.save()
 
     def toggle(self, index):
@@ -124,6 +140,21 @@ class TodoApp:
         )
         add_btn.pack(side="right", ipady=4)
 
+        category_box = tk.Frame(self.root, bg=COLOR_BG)
+        category_box.pack(fill="x", padx=24, pady=(0, 8))
+
+        tk.Label(
+            category_box, text="カテゴリ", bg=COLOR_BG, fg=COLOR_DONE,
+            font=("Yu Gothic UI", 10),
+        ).pack(side="left", padx=(0, 8))
+
+        self.category_var = tk.StringVar(value=DEFAULT_CATEGORY)
+        self.category_combo = ttk.Combobox(
+            category_box, textvariable=self.category_var, values=CATEGORIES,
+            state="readonly", font=("Yu Gothic UI", 10), width=10,
+        )
+        self.category_combo.pack(side="left")
+
     def _build_list(self):
         # スクロールできるタスク一覧
         container = tk.Frame(self.root, bg=COLOR_BG)
@@ -149,7 +180,8 @@ class TodoApp:
         title = self.entry.get().strip()
         if title == "":
             return
-        self.store.add(title)
+        category = self.category_var.get() or DEFAULT_CATEGORY
+        self.store.add(title, category)
         self.entry.delete(0, tk.END)
         self.refresh()
 
@@ -181,6 +213,15 @@ class TodoApp:
                 command=lambda i=index: self.on_toggle(i),
             )
             check.pack(side="left", padx=(8, 4), pady=8)
+
+            # カテゴリタグ
+            category = task.get("category", DEFAULT_CATEGORY)
+            tag_color = COLOR_DONE if task["done"] else CATEGORY_COLORS.get(category, COLOR_DONE)
+            tag = tk.Label(
+                row, text=category, bg=COLOR_PANEL, fg=tag_color,
+                font=("Yu Gothic UI", 9, "bold"),
+            )
+            tag.pack(side="left", padx=(0, 4), pady=8)
 
             # タスク名 (完了なら色を薄く)
             color = COLOR_DONE if task["done"] else COLOR_TEXT
