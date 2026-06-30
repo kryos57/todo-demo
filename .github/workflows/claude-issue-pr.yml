@@ -1,0 +1,38 @@
+name: Claude Issue to PR
+
+# issue コメントに @claude が含まれる場合のみ起動する。
+# issue 作成 (issues: opened) では起動しないよう、issue_comment イベントのみを対象にする。
+on:
+  issue_comment:
+    types: [created]
+
+# @claude メンションを含むコメントだけを処理する。
+# (issue 本体の作成だけでは issue_comment は発火しないため、コメントが必須となる)
+jobs:
+  claude:
+    if: contains(github.event.comment.body, '@claude')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write       # ブランチ作成・コミットのため
+      pull-requests: write  # PR 作成のため
+      issues: write         # issue へのコメント返信のため
+      id-token: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Run Claude Code
+        uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          # issue の本文・コメント内容は claude-code-action が
+          # github.event のコンテキストから自動的に読み取る。
+          # issue の内容をもとにコードを修正し PR を作成するよう指示する。
+          prompt: |
+            あなたはこのリポジトリのコーディングエージェントです。
+            トリガーとなった issue の内容と、@claude メンションを含むコメントの
+            内容を読み取り、要望に沿ってコードを修正してください。
+            修正後は新しいブランチを作成して変更をコミットし、
+            この issue に紐づくプルリクエストを作成してください。
