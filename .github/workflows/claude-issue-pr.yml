@@ -17,9 +17,10 @@ jobs:
       pull-requests: write  # PR 作成のため
       issues: write         # issue へのコメント返信のため
       id-token: write
+      actions: write        # Actions キャッシュ書き込みのため
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
@@ -30,6 +31,8 @@ jobs:
           # issue の本文・コメント内容は claude-code-action が
           # github.event のコンテキストから自動的に読み取る。
           # issue の内容をもとにコードを修正し PR を作成するよう指示する。
+          claude_args: |
+            --allowedTools "Bash,Edit,Write,Read,Glob,Grep"
           prompt: |
             あなたはこのリポジトリのコーディングエージェントです。
             トリガーとなった issue の内容と、@claude メンションを含むコメントの
